@@ -5,8 +5,8 @@ import Tesseract from 'tesseract.js';
 import jsPDF from 'jspdf';
 import { DEMO_TEXT, DEMO_META } from './demoDocument';
 
-// Use the CDN worker for pdfjs (only static, no patient data leaves the device).
-pdfjsLib.GlobalWorkerOptions.workerSrc = `https://cdn.jsdelivr.net/npm/pdfjs-dist@4.8.69/build/pdf.worker.min.mjs`;
+// Bundled with the app and served from the same origin.
+pdfjsLib.GlobalWorkerOptions.workerSrc = `${process.env.PUBLIC_URL || ''}/pdf.worker.min.mjs`;
 
 const RENDER_DPI_SCALE = 2; // renders PDFs at ~2x for OCR quality
 const DEFAULT_LANG = 'fra+eng';
