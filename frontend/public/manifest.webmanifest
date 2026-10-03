@@ -1,0 +1,16 @@
+{
+  "name": "MedAnon Local",
+  "short_name": "MedAnon",
+  "description": "Anonymisation locale de documents médicaux",
+  "start_url": "/MEDANON/",
+  "scope": "/MEDANON/",
+  "display": "standalone",
+  "background_color": "#FBF9F5",
+  "theme_color": "#0F1E36",
+  "orientation": "any",
+  "categories": [
+    "medical",
+    "productivity",
+    "utilities"
+  ]
+}
