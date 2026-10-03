@@ -1,4 +1,4 @@
-name: Extract source and build APK
+name: Build MedAnon APK
 
 on:
   push:
@@ -11,15 +11,17 @@ permissions:
 jobs:
   build:
     runs-on: ubuntu-latest
+    timeout-minutes: 30
     steps:
       - uses: actions/checkout@v4
 
-      - name: Extract source archive if present
+      - name: Extract uploaded source
         shell: bash
         run: |
-          if [ -f .source/medanon_source.tar.xz ]; then
-            tar -xJf .source/medanon_source.tar.xz -C .
-            rm -rf .source MEDANON-main.zip
+          if [ -f medanon-local-source.zip ]; then
+            unzip -o medanon-local-source.zip -d .
+            rm -f medanon-local-source.zip
+            rm -rf .source
             git config user.name "github-actions[bot]"
             git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
             git add -A
@@ -30,8 +32,6 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '20'
-          cache: yarn
-          cache-dependency-path: frontend/package.json
 
       - name: Install frontend dependencies
         working-directory: frontend
@@ -43,13 +43,15 @@ jobs:
         working-directory: frontend
         env:
           CI: 'false'
+          DISABLE_EMERGENT_OVERLAY: 'true'
+          ENABLE_HEALTH_CHECK: 'false'
         run: yarn build
 
-      - name: Add Capacitor Android wrapper
+      - name: Add Capacitor Android
         working-directory: frontend
         run: |
-          yarn add -D @capacitor/cli@6
           yarn add @capacitor/core@6 @capacitor/android@6
+          yarn add -D @capacitor/cli@6
           cat > capacitor.config.json <<'EOF'
           {
             "appId": "ch.medanon.local",
@@ -67,9 +69,11 @@ jobs:
 
       - name: Build debug APK
         working-directory: frontend/android
-        run: ./gradlew assembleDebug
+        run: |
+          chmod +x gradlew
+          ./gradlew assembleDebug --no-daemon
 
-      - name: Copy APK
+      - name: Prepare APK
         run: |
           mkdir -p dist
           cp frontend/android/app/build/outputs/apk/debug/app-debug.apk dist/MedAnon-Local-debug.apk
