@@ -10,24 +10,50 @@ permissions:
 
 jobs:
   build:
+    if: github.actor != 'github-actions[bot]'
     runs-on: ubuntu-latest
-    timeout-minutes: 30
+    timeout-minutes: 35
     steps:
       - uses: actions/checkout@v4
 
-      - name: Extract uploaded source
+      - name: Extract and clean source
         shell: bash
         run: |
-          if [ -f medanon-local-source.zip ]; then
-            unzip -o medanon-local-source.zip -d .
-            rm -f medanon-local-source.zip
-            rm -rf .source
-            git config user.name "github-actions[bot]"
-            git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-            git add -A
-            git commit -m "Extract MedAnon source [skip ci]" || true
-            git push
+          set -e
+          rm -rf /tmp/medanon-src
+          mkdir -p /tmp/medanon-src
+          if [ -f .source/medanon_source.tar.xz ]; then
+            tar -xJf .source/medanon_source.tar.xz -C /tmp/medanon-src
+          elif [ -f medanon-local-source.zip ]; then
+            unzip -q medanon-local-source.zip -d /tmp/medanon-src
+          elif [ -f MEDANON-main.zip ]; then
+            unzip -q MEDANON-main.zip -d /tmp/medanon-src
           fi
+
+          SRC=/tmp/medanon-src
+          COUNT=$(find "$SRC" -mindepth 1 -maxdepth 1 | wc -l)
+          if [ "$COUNT" -eq 1 ] && [ -d "$(find "$SRC" -mindepth 1 -maxdepth 1 -type d | head -1)" ]; then
+            SRC=$(find "$SRC" -mindepth 1 -maxdepth 1 -type d | head -1)
+          fi
+
+          if [ -d "$SRC/frontend" ]; then
+            rsync -a --delete-excluded \
+              --exclude '.git' \
+              --exclude '.github' \
+              --exclude 'node_modules' \
+              --exclude 'build' \
+              "$SRC"/ ./
+          fi
+
+          rm -rf .source .bootstrap
+          rm -f medanon-local-source.zip MEDANON-main.zip test_result.md
+          rm -f frontend/.env backend/.env
+
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A
+          git commit -m "Clean MedAnon source tree [skip ci]" || true
+          git push
 
       - uses: actions/setup-node@v4
         with:
@@ -47,7 +73,7 @@ jobs:
           ENABLE_HEALTH_CHECK: 'false'
         run: yarn build
 
-      - name: Add Capacitor Android
+      - name: Create Android wrapper
         working-directory: frontend
         run: |
           yarn add @capacitor/core@6 @capacitor/android@6
@@ -59,6 +85,7 @@ jobs:
             "webDir": "build"
           }
           EOF
+          rm -rf android
           npx cap add android
           npx cap copy android
 
@@ -67,19 +94,24 @@ jobs:
           distribution: temurin
           java-version: '17'
 
-      - name: Build debug APK
+      - name: Build APK
         working-directory: frontend/android
         run: |
           chmod +x gradlew
           ./gradlew assembleDebug --no-daemon
 
-      - name: Prepare APK
+      - name: Save APK in repository
+        shell: bash
         run: |
-          mkdir -p dist
-          cp frontend/android/app/build/outputs/apk/debug/app-debug.apk dist/MedAnon-Local-debug.apk
+          mkdir -p apk
+          cp frontend/android/app/build/outputs/apk/debug/app-debug.apk apk/MedAnon-Local-debug.apk
+          rm -rf frontend/android/.gradle frontend/android/build frontend/android/app/build
+          git add frontend/package.json frontend/yarn.lock frontend/capacitor.config.json frontend/android apk/MedAnon-Local-debug.apk
+          git commit -m "Add Android wrapper and APK [skip ci]" || true
+          git push
 
       - uses: actions/upload-artifact@v4
         with:
           name: MedAnon-Local-APK
-          path: dist/MedAnon-Local-debug.apk
+          path: apk/MedAnon-Local-debug.apk
           retention-days: 30
