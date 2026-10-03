@@ -1,0 +1,139 @@
+{
+  "responsive": {
+    "breakpoint": "mobile-first — design for mobile viewports (375px+) first, expanding seamlessly to tablet (768px) and desktop (1024px+)",
+    "layout": "Single column vertical stack on mobile; side-by-side split screen (document viewer on left, PII detection panel on right) on desktop (lg:grid-cols-12); collapsible drawer for side panel on mobile devices",
+    "typography": "Mobile-first scale using rem units (H1: text-2xl sm:text-3xl lg:text-4xl, Body: text-base sm:text-sm, Inputs/Buttons: min 16px font size to prevent mobile iOS zoom)",
+    "overflow_guard": "Enforce max-w-full and overflow-x-hidden on outer containers; document canvas uses pinch/scroll-area with explicit max-h-[70vh] on mobile",
+    "tap_targets": "All buttons, PII toggle items, and category filters must have a minimum touch target height of 44px on touch devices"
+  },
+  "instructions_to_main_agent": "Build MedAnon Local as a Swiss-medical grade, ultra-trustworthy, local-first web application for gynecologists and physicians. Prioritize extreme visual calm, clean Swiss typography, generous spacing, precise PII highlighting, and responsive mobile-first accessibility. Follow the 5 core screen flows: Home (3 main action cards), Local OCR Processing Progress, Interactive Review (Document viewer + PII side panel with category filters & manual redaction tool), Before/After Anonymization Preview (Suppression vs Pseudonymisation), and Export Checklist + Download/Copy options. Ensure data-testid attributes are added to all interactive elements.",
+  "project_metadata": {
+    "app_name": "MedAnon Local",
+    "target_audience": "Swiss Gynecologists, Obstetricians, Physicians & Healthcare Administrative Staff",
+    "design_archetype": "Swiss Medical Precision & High-Trust Calm (Off-white paper, deep navy slate, muted alpine sage accents)",
+    "primary_language": "FR (Français) with dynamic language switcher to DE (Deutsch), IT (Italiano), and EN (English)"
+  },
+  "typography": {
+    "heading_font": "Outfit, 'Plus Jakarta Sans', sans-serif",
+    "body_font": "'IBM Plex Sans', -apple-system, BlinkMacSystemFont, sans-serif",
+    "mono_font": "'JetBrains Mono', 'IBM Plex Mono', monospace",
+    "hierarchy": {
+      "h1": "text-2xl sm:text-3xl lg:text-4xl font-semibold tracking-tight text-[#0F1E36] leading-snug",
+      "h2": "text-xl sm:text-2xl lg:text-3xl font-medium tracking-tight text-[#0F1E36]",
+      "h3": "text-lg sm:text-xl font-medium text-[#1E293B]",
+      "h4_label": "text-xs uppercase tracking-widest font-semibold text-[#475569]",
+      "body": "text-sm sm:text-base leading-relaxed text-[#334155]",
+      "caption": "text-xs leading-normal text-[#64748B]"
+    }
+  },
+  "colors": {
+    "backgrounds": {
+      "primary_page": "#FBF9F5",
+      "card_surface": "#FFFFFF",
+      "sidebar_surface": "#F4F1EA",
+      "document_paper": "#FFFFFF",
+      "dark_accent_surface": "#0F1E36"
+    },
+    "text": {
+      "primary": "#0F1E36",
+      "secondary": "#475569",
+      "muted": "#64748B",
+      "inverse": "#FFFFFF",
+      "accent_green": "#2C6E49"
+    },
+    "borders": {
+      "light": "#E5E0D8",
+      "subtle": "#CBD5E1",
+      "focused": "#0F1E36",
+      "privacy_shield": "#A7F3D0"
+    },
+    "brand_status": {
+      "privacy_bg": "#ECFDF5",
+      "privacy_text": "#065F46",
+      "privacy_border": "#6EE7B7",
+      "swiss_red_alert": "#DC2626",
+      "swiss_red_bg": "#FEF2F2"
+    }
+  },
+  "pii_categories": {
+    "identity": {
+      "label_fr": "Identité (Noms, Prénoms, AVS/AHV)",
+      "bg": "#E0E7FF",
+      "text": "#3730A3",
+      "border": "#818CF8",
+      "badge_color": "bg-indigo-100 text-indigo-800 border-indigo-300"
+    },
+    "contact": {
+      "label_fr": "Contact (Téléphone, Email, Adresse)",
+      "bg": "#D1FAE5",
+      "text": "#065F46",
+      "border": "#34D399",
+      "badge_color": "bg-emerald-100 text-emerald-800 border-emerald-300"
+    },
+    "dates": {
+      "label_fr": "Dates (Naissance, Consultations, Hospitalisation)",
+      "bg": "#FEF3C7",
+      "text": "#92400E",
+      "border": "#FBBF24",
+      "badge_color": "bg-amber-100 text-amber-800 border-amber-300"
+    },
+    "admin_ids": {
+      "label_fr": "IDs Administratifs (N° Patient, Assurance, Facture)",
+      "bg": "#EDE9FE",
+      "text": "#5B21B6",
+      "border": "#A78BFA",
+      "badge_color": "bg-purple-100 text-purple-800 border-purple-300"
+    },
+    "healthcare_pro": {
+      "label_fr": "Professionnels de santé (Médecins, Clinique, Signatures)",
+      "bg": "#FFE4E6",
+      "text": "#9F1239",
+      "border": "#FB7185",
+      "badge_color": "bg-rose-100 text-rose-800 border-rose-300"
+    },
+    "other": {
+      "label_fr": "Autres données sensibles (Diagnostics, Notes)",
+      "bg": "#F1F5F9",
+      "text": "#334155",
+      "border": "#94A3B8",
+      "badge_color": "bg-slate-100 text-slate-800 border-slate-300"
+    }
+  },
+  "grids": {
+    "home_screen": "grid grid-cols-1 md:grid-cols-3 gap-6 lg:gap-8 max-w-6xl mx-auto",
+    "review_screen": "grid grid-cols-1 lg:grid-cols-12 gap-6 items-start max-w-7xl mx-auto",
+    "review_left_doc_col": "lg:col-span-7 xl:col-span-8 space-y-4",
+    "review_right_panel_col": "lg:col-span-5 xl:col-span-4 space-y-4 sticky top-20",
+    "export_screen": "grid grid-cols-1 md:grid-cols-12 gap-6 max-w-5xl mx-auto"
+  },
+  "layouts": {
+    "header_bar": "flex items-center justify-between px-4 sm:px-8 py-3 bg-[#FFFFFF]/90 backdrop-blur-md border-b border-[#E5E0D8] sticky top-0 z-50",
+    "privacy_badge": "inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-medium bg-[#ECFDF5] text-[#065F46] border border-[#6EE7B7] hover:bg-[#D1FAE5] cursor-pointer transition-colors",
+    "action_card": "p-6 sm:p-8 rounded-xl bg-white border border-[#E5E0D8] shadow-sm hover:shadow-md hover:border-[#0F1E36]/30 transition-all flex flex-col justify-between group cursor-pointer"
+  },
+  "motion": {
+    "transitions": "transition-all duration-200 ease-out",
+    "processing_pulse": "animate-pulse duration-1000",
+    "ocr_scan_line": "absolute inset-x-0 h-1 bg-[#2C6E49]/60 shadow-[0_0_8px_#2C6E49] animate-scan"
+  },
+  "accessibility": {
+    "contrast_target": "APCA 75+ / WCAG AA compliant. All body text on off-white bg has a minimum contrast ratio of 7:1",
+    "data_testid_required": true,
+    "focus_ring": "focus-visible:ring-2 focus-visible:ring-[#0F1E36] focus-visible:ring-offset-2"
+  },
+  "image_urls": {
+    "sample_medical_report_thumb": "https://images.unsplash.com/photo-1678940805259-e2be79fa33e4?crop=entropy&cs=srgb&fm=jpg&q=85&w=600",
+    "doctor_clipboard_icon": "https://images.unsplash.com/photo-1758691462814-485c3672e447?crop=entropy&cs=srgb&fm=jpg&q=85&w=600"
+  },
+  "3d_libraries": {
+    "use_3d": false,
+    "note": "3D graphics are explicitly disabled for MedAnon Local to ensure medical seriousness, instant WASM local loading speed, and zero clinical distraction."
+  },
+  "UNIVERSAL GUIDELINES FOR MAIN AGENT": {
+    "component_reuse": "Use shadcn primitives in /src/components/ui/ (Button, Dialog, Checkbox, Tabs, DropdownMenu, Sheet, Badge, Switch, Progress, Toast) with custom styling applied via Tailwind.",
+    "icons": "Use lucide-react icons exclusively. No emoji UI icons except the single 🔒 lock symbol inside privacy badges.",
+    "toasts": "Use Sonner (/src/components/ui/sonner.jsx) for user feedback toasts (e.g. 'Document anonymisé avec succès', 'Texte copié dans le presse-papier').",
+    "privacy_guarantee_modal": "Provide an informative modal explaining local WASM processing (Tesseract.js OCR, local regex & NER patterns) with zero network requests.",
+    "testing": "Add testid attributes in kebab-case to all action buttons, input triggers, category filters, and document controls."
+  }
+}
