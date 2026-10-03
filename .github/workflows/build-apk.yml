@@ -1,0 +1,81 @@
+name: Extract source and build APK
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Extract source archive if present
+        shell: bash
+        run: |
+          if [ -f .source/medanon_source.tar.xz ]; then
+            tar -xJf .source/medanon_source.tar.xz -C .
+            rm -rf .source MEDANON-main.zip
+            git config user.name "github-actions[bot]"
+            git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+            git add -A
+            git commit -m "Extract MedAnon source [skip ci]" || true
+            git push
+          fi
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: yarn
+          cache-dependency-path: frontend/package.json
+
+      - name: Install frontend dependencies
+        working-directory: frontend
+        run: |
+          corepack enable
+          yarn install --network-timeout 600000
+
+      - name: Build React app
+        working-directory: frontend
+        env:
+          CI: 'false'
+        run: yarn build
+
+      - name: Add Capacitor Android wrapper
+        working-directory: frontend
+        run: |
+          yarn add -D @capacitor/cli@6
+          yarn add @capacitor/core@6 @capacitor/android@6
+          cat > capacitor.config.json <<'EOF'
+          {
+            "appId": "ch.medanon.local",
+            "appName": "MedAnon Local",
+            "webDir": "build"
+          }
+          EOF
+          npx cap add android
+          npx cap copy android
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - name: Build debug APK
+        working-directory: frontend/android
+        run: ./gradlew assembleDebug
+
+      - name: Copy APK
+        run: |
+          mkdir -p dist
+          cp frontend/android/app/build/outputs/apk/debug/app-debug.apk dist/MedAnon-Local-debug.apk
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: MedAnon-Local-APK
+          path: dist/MedAnon-Local-debug.apk
+          retention-days: 30
