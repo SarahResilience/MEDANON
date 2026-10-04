@@ -46,8 +46,6 @@ jobs:
         with:
           distribution: temurin
           java-version: '17'
-      - uses: android-actions/setup-android@v3
-        if: matrix.platform == 'android'
       - run: bash ../automation/scripts/build-mobile.sh "${{ matrix.platform }}" "${{ matrix.variant }}"
         working-directory: source
       - uses: actions/upload-artifact@v4
