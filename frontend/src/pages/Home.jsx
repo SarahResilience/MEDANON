@@ -31,7 +31,9 @@ export function Home() {
       finalizeDetections(pages);
     } catch (err) {
       console.error(err);
-      toast.error('Erreur lors du traitement du document.');
+      toast.error(err.message === 'OCR_EMPTY'
+        ? (lang === 'fr' ? 'Aucun texte localisé. Reprenez une photo nette, bien éclairée et de face.' : 'No text located. Please take a sharp, well-lit, straight-on photo.')
+        : (lang === 'fr' ? 'Erreur lors du traitement du document.' : 'Document processing failed.'));
       doc.setStep('home');
     }
   };

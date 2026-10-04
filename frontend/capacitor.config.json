@@ -1,5 +1,5 @@
 {
-  "appId": "ch.medanon.local",
-  "appName": "MedAnon Local",
+  "appId": "ch.medanon.local.v2",
+  "appName": "MedAnon V2",
   "webDir": "build"
 }

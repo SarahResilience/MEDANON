@@ -1,0 +1,63 @@
+name: Build MedAnon V1 and V2
+on:
+  workflow_dispatch:
+  push:
+    branches: ['v2/ocr-certificats']
+    paths: ['frontend/**', 'scripts/build-mobile.sh', '.github/workflows/build-mobile-v2.yml']
+permissions:
+  contents: write
+jobs:
+  mobile:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - platform: android
+            runner: ubuntu-latest
+            variant: V1
+            ref: a978db000d81f17a6daf8600f93dcd8c52524385
+          - platform: ios
+            runner: macos-14
+            variant: V1
+            ref: a978db000d81f17a6daf8600f93dcd8c52524385
+          - platform: android
+            runner: ubuntu-latest
+            variant: V2
+            ref: v2/ocr-certificats
+          - platform: ios
+            runner: macos-14
+            variant: V2
+            ref: v2/ocr-certificats
+    runs-on: ${{ matrix.runner }}
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          path: automation
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ matrix.variant == 'V2' && github.sha || matrix.ref }}
+          path: source
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - uses: actions/setup-java@v4
+        if: matrix.platform == 'android'
+        with:
+          distribution: temurin
+          java-version: '17'
+      - uses: android-actions/setup-android@v3
+        if: matrix.platform == 'android'
+      - run: bash ../automation/scripts/build-mobile.sh "${{ matrix.platform }}" "${{ matrix.variant }}"
+        working-directory: source
+      - uses: actions/upload-artifact@v4
+        with:
+          name: MedAnon-${{ matrix.variant }}-${{ matrix.platform }}-${{ github.sha }}
+          path: source/dist/*
+      - name: Preserve build in a versioned release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+        run: |
+          TAG="${{ matrix.variant }}-${GITHUB_SHA}-${{ matrix.platform }}"
+          gh release create "$TAG" source/dist/* --target "$GITHUB_SHA" --title "MedAnon ${{ matrix.variant }} ${{ matrix.platform }} ${GITHUB_SHA:0:7}" --prerelease --notes "Android: debug APK. iOS: unsigned Xcode archive; signing required before iPhone installation. Source commit: $GITHUB_SHA."

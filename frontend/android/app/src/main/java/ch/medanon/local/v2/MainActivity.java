@@ -1,4 +1,4 @@
-package ch.medanon.local;
+package ch.medanon.local.v2;
 
 import com.getcapacitor.BridgeActivity;
 

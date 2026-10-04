@@ -3,12 +3,13 @@
 import * as pdfjsLib from 'pdfjs-dist/build/pdf.mjs';
 import Tesseract from 'tesseract.js';
 import jsPDF from 'jspdf';
+import { recognizePage } from './ocrEngine.mjs';
 import { DEMO_TEXT, DEMO_META } from './demoDocument';
 
 // Bundled with the app and served from the same origin.
 pdfjsLib.GlobalWorkerOptions.workerSrc = `${process.env.PUBLIC_URL || ''}/pdf.worker.min.mjs`;
 
-const RENDER_DPI_SCALE = 2; // renders PDFs at ~2x for OCR quality
+const RENDER_DPI_SCALE = 3; // renders PDFs at ~2x for OCR quality
 const DEFAULT_LANG = 'fra+eng';
 
 // ---------- File → Pages (canvas + text extraction) ----------
@@ -102,38 +103,37 @@ async function loadImagePage(file) {
 
 // ---------- OCR ----------
 export async function ocrPages(pages, onProgress = () => {}, lang = DEFAULT_LANG) {
-  for (let i = 0; i < pages.length; i++) {
-    const p = pages[i];
-    // Skip OCR if we already have plenty of embedded text
-    if ((p.embeddedText || '').replace(/\s/g, '').length > 200) {
-      // Convert embedded items into "words"
-      p.ocrText = p.embeddedText;
-      p.words = (p.embeddedItems || []).flatMap((it) => tokenizeItem(it));
-      onProgress({ step: 'ocr', pageIndex: i, progress: 1, totalPages: pages.length });
-      continue;
-    }
-    onProgress({ step: 'ocr', pageIndex: i, progress: 0, totalPages: pages.length });
-    const { data } = await Tesseract.recognize(p.canvas, lang, {
-      logger: (m) => {
-        if (m.status === 'recognizing text') {
-          onProgress({ step: 'ocr', pageIndex: i, progress: m.progress, totalPages: pages.length });
-        }
-      },
-    });
-    p.ocrText = data.text || '';
-    const words = [];
-    (data.words || []).forEach((w) => {
-      if (!w.text || !w.bbox) return;
-      words.push({
-        str: w.text,
-        x: w.bbox.x0, y: w.bbox.y0,
-        w: w.bbox.x1 - w.bbox.x0, h: w.bbox.y1 - w.bbox.y0,
+  let worker;
+  let activePage = 0;
+  try {
+    for (let i = 0; i < pages.length; i++) {
+      activePage = i;
+      const p = pages[i];
+      onProgress({ step: 'ocr', pageIndex: i, progress: 0, totalPages: pages.length });
+      if (!worker) worker = await Tesseract.createWorker(lang, 1, {
+        logger: (m) => {
+          if (m.status === 'recognizing text') onProgress({
+            step: 'ocr', pageIndex: activePage, progress: m.progress, totalPages: pages.length,
+          });
+        },
       });
-    });
-    p.words = words;
-    onProgress({ step: 'ocr', pageIndex: i, progress: 1, totalPages: pages.length });
+      // Always inspect the raster: a PDF text layer can contain only a letterhead,
+      // while the patient details are in an image below it.
+      const result = await recognizePage(worker, p.canvas);
+      p.ocrText = result.text;
+      p.words = result.words;
+      p.ocrConfidence = result.confidence;
+      if (!p.words.length && (p.embeddedText || '').trim()) {
+        p.ocrText = p.embeddedText;
+        p.words = (p.embeddedItems || []).flatMap((it) => tokenizeItem(it));
+      }
+      if (!p.words.length) throw new Error('OCR_EMPTY');
+      onProgress({ step: 'ocr', pageIndex: i, progress: 1, totalPages: pages.length });
+    }
+    return pages;
+  } finally {
+    if (worker) await worker.terminate();
   }
-  return pages;
 }
 
 function tokenizeItem(it) {

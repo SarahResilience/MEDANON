@@ -1,10 +1,10 @@
 apply plugin: 'com.android.application'
 
 android {
-    namespace "ch.medanon.local"
+    namespace "ch.medanon.local.v2"
     compileSdk rootProject.ext.compileSdkVersion
     defaultConfig {
-        applicationId "ch.medanon.local"
+        applicationId "ch.medanon.local.v2"
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
         versionCode 1
