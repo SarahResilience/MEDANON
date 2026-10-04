@@ -5,6 +5,7 @@ set -euo pipefail
 platform="${1:?Usage: scripts/build-mobile.sh android|ios}"
 case "$platform" in android|ios) ;; *) exit 2;; esac
 variant="${2:-V2}"
+script_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 cd frontend
 corepack enable
 yarn install --network-timeout 600000
@@ -12,7 +13,7 @@ yarn add @capacitor/core@6 "@capacitor/$platform@6"
 yarn add -D @capacitor/cli@6
 cp node_modules/pdfjs-dist/build/pdf.worker.min.mjs public/pdf.worker.min.mjs
 PUBLIC_URL=./ CI=false DISABLE_EMERGENT_OVERLAY=true ENABLE_HEALTH_CHECK=false yarn build
-python3 ../scripts/check-mobile-assets.py build
+python3 "$script_dir/check-mobile-assets.py" build
 if [ ! -d "$platform" ]; then npx cap add "$platform"; fi
 npx cap sync "$platform"
 mkdir -p ../dist
