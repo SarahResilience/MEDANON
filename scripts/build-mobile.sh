@@ -11,7 +11,8 @@ yarn install --network-timeout 600000
 yarn add @capacitor/core@6 "@capacitor/$platform@6"
 yarn add -D @capacitor/cli@6
 cp node_modules/pdfjs-dist/build/pdf.worker.min.mjs public/pdf.worker.min.mjs
-CI=false DISABLE_EMERGENT_OVERLAY=true ENABLE_HEALTH_CHECK=false yarn build
+PUBLIC_URL=./ CI=false DISABLE_EMERGENT_OVERLAY=true ENABLE_HEALTH_CHECK=false yarn build
+python3 ../scripts/check-mobile-assets.py build
 if [ ! -d "$platform" ]; then npx cap add "$platform"; fi
 npx cap sync "$platform"
 mkdir -p ../dist

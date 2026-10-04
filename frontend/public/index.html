@@ -15,7 +15,7 @@
     <noscript>JavaScript doit être activé pour utiliser MedAnon Local.</noscript>
     <div id="root"></div>
     <script>
-      if ('serviceWorker' in navigator) {
+      if ('serviceWorker' in navigator && !window.Capacitor) {
         window.addEventListener('load', function () {
           navigator.serviceWorker.register('%PUBLIC_URL%/service-worker.js').catch(function () {});
         });
