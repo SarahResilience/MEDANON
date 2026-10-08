@@ -58,6 +58,9 @@ jobs:
           GH_REPO: ${{ github.repository }}
         run: |
           TAG="${{ matrix.variant }}-${GITHUB_SHA}-${{ matrix.platform }}"
-          if [ "${{ matrix.platform }}" = android ]; then EXT=apk; else EXT=zip; fi
-          gh release create "$TAG" source/dist/*."$EXT" --target "$GITHUB_SHA" --title "MedAnon ${{ matrix.variant }} ${{ matrix.platform }} ${GITHUB_SHA:0:7}" --prerelease --notes "Android: debug APK. iOS: unsigned Xcode archive; signing required before iPhone installation. Source commit: $GITHUB_SHA."
+          if [ "${{ matrix.platform }}" = android ]; then
+            FILES=(source/dist/*.apk)
+            if [ "${{ matrix.variant }}" = V2 ]; then FILES+=(source/dist/MedAnon-V2-source.zip); fi
+          else FILES=(source/dist/*.zip); fi
+          gh release create "$TAG" "${FILES[@]}" --target "$GITHUB_SHA" --title "MedAnon ${{ matrix.variant }} ${{ matrix.platform }} ${GITHUB_SHA:0:7}" --prerelease --notes "Android: debug APK, plus V2 source archive. iOS: unsigned Xcode archive; signing required before iPhone installation. Source commit: $GITHUB_SHA."
 

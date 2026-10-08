@@ -7,6 +7,8 @@ import { Button } from '../components/ui/button';
 import { Checkbox } from '../components/ui/checkbox';
 import { anonymizeText, makePseudonymizer } from '../lib/detectors';
 import { exportAnonymizedPdf, buildJoinedText } from '../lib/pdfUtils';
+import { textRedactions } from '../lib/textRedactions.mjs';
+import { Capacitor } from '@capacitor/core';
 
 export function Export() {
   const doc = useDoc();
@@ -28,12 +30,6 @@ export function Export() {
     return m;
   }, [detectionsByPage, rejected, manualBoxes]);
 
-  const activeDetections = useMemo(() => {
-    const list = [];
-    for (const [, dets] of activeByPage.entries()) for (const d of dets) list.push(d);
-    return list;
-  }, [activeByPage]);
-
   const pseudoFn = useMemo(() => makePseudonymizer(), []);
 
   const toggleCheck = (k) => {
@@ -50,17 +46,17 @@ export function Export() {
     if (!canExport) return;
     setBusy(true);
     try {
-      await exportAnonymizedPdf({
+      const delivery = await exportAnonymizedPdf({
         pages,
         redactionsByPage: activeByPage,
         mode,
         pseudonymFn: pseudoFn,
         filename: 'compte_rendu_ANONYMISE.pdf',
       });
-      toast.success(t(lang, 'downloaded'));
+      if (delivery === 'cancelled') toast.info('Enregistrement annulé. Aucun fichier exporté.');
+      else toast.success(delivery === 'share' ? 'PDF créé. Choisissez où le conserver dans le menu de partage.' : 'PDF enregistré.');
     } catch (e) {
-      console.error(e);
-      toast.error('Export échoué.');
+      toast.error('Export interrompu ou échoué. Réessayez et choisissez une destination pour le PDF.');
     } finally {
       setBusy(false);
     }
@@ -69,15 +65,7 @@ export function Export() {
   const handleCopy = async () => {
     if (!canExport) return;
     const { text, offsets } = buildJoinedText(pages);
-    // Rebuild detections in "text offsets" space by scanning active detection values.
-    // Simpler: reuse anonymizeText with the full page text + string search of each active detection.
-    // We'll create text-space detections by matching value occurrences in the joined text.
-    const dets = [];
-    for (const d of activeDetections) {
-      if (!d.value || d.value === '(manuel)') continue;
-      const idx = indexOfCaseInsensitive(text, d.value);
-      if (idx >= 0) dets.push({ start: idx, end: idx + d.value.length, value: d.value, category: d.category, label: d.label });
-    }
+    const dets = textRedactions(pages, offsets, activeByPage);
     const cleaned = anonymizeText(text, dets, mode);
     try {
       await navigator.clipboard.writeText(cleaned);
@@ -158,7 +146,7 @@ export function Export() {
           className="bg-[#2C6E49] hover:bg-[#245839] text-white h-12 text-base"
         >
           <Download className="w-4 h-4 mr-2" />
-          {t(lang, 'downloadPdf')}
+          {Capacitor.isNativePlatform() ? (lang === 'fr' ? 'Enregistrer le PDF' : 'Save PDF') : t(lang, 'downloadPdf')}
         </Button>
         <Button
           onClick={handleCopy}
@@ -171,6 +159,8 @@ export function Export() {
           {t(lang, 'copyText')}
         </Button>
       </div>
+
+      {Capacitor.isNativePlatform() && <p className="text-sm text-[#475569] mb-4">Choisissez où conserver le PDF dans la fenêtre du téléphone, puis confirmez l’enregistrement. Sur Android, vous pouvez choisir le dossier Téléchargements.</p>}
 
       {canExport && (
         <div className="rounded-xl bg-[#ECFDF5] border border-[#6EE7B7] p-4 flex items-start gap-3 mb-4">
@@ -188,8 +178,4 @@ export function Export() {
       </div>
     </div>
   );
-}
-
-function indexOfCaseInsensitive(haystack, needle) {
-  return haystack.toLowerCase().indexOf(needle.toLowerCase());
 }

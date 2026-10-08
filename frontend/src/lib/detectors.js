@@ -29,13 +29,18 @@ const PATTERNS = [
   // Emails
   { key: 'email', category: CATEGORIES.contact, re: /\b[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}\b/g, label: 'Email' },
   // Swiss phone (+41 22 xxx xx xx, 0XX XXX XX XX, etc.)
-  { key: 'phone_ch', category: CATEGORIES.contact, re: /(?:\+41[\s.\-]?|0041[\s.\-]?|\b0)(?:\d{2})[\s.\-]?\d{3}[\s.\-]?\d{2}[\s.\-]?\d{2}\b/g, label: 'Téléphone' },
+  { key: 'phone_ch', category: CATEGORIES.contact, re: /(?:\+41[ \t.\-]?|0041[ \t.\-]?|\b0)(?:\d{2})[ \t.\-]?\d{3}[ \t.\-]?\d{2}[ \t.\-]?\d{2}\b/g, label: 'Téléphone' },
   // Generic international phone
   { key: 'phone_intl', category: CATEGORIES.contact, re: /\+\d{1,3}[\s.\-]?\d{2,4}[\s.\-]?\d{2,4}[\s.\-]?\d{2,4}[\s.\-]?\d{0,4}\b/g, label: 'Téléphone' },
   // AVS/AHV 13-digit new format: 756.XXXX.XXXX.XX
   { key: 'avs', category: CATEGORIES.admin, re: /\b756[\.\s\-]?\d{4}[\.\s\-]?\d{4}[\.\s\-]?\d{2}\b/g, label: 'N° AVS/AHV' },
   // Swiss postal code (4 digits) + city  — captured as "1000 Lausanne"
   { key: 'ch_addr_line', category: CATEGORIES.contact, re: /\b(?:CH-)?[1-9]\d{3}\s+[A-ZÉÈÀÂÊÎÔÛÄÖÜ][a-zA-Zéèàâêîôûäöüç\-\s]{2,40}\b/g, label: 'Adresse (NPA + ville)' },
+  // Lab headers often omit a colon and use SURNAME, given names.
+  { key: 'surname_first', category: CATEGORIES.identity, re: /\b[A-ZÀ-ÖØ-Þ][A-ZÀ-ÖØ-Þ'’\-]{1,40},[ \t]+[A-ZÀ-ÖØ-Þ][A-Za-zÀ-ÖØ-öø-ÿ'’\-]*(?:[ \t]+[A-Za-zÀ-ÖØ-öø-ÿ'’\-]+){0,4}/g, label: 'Nom complet (laboratoire)' },
+  { key: 'street', category: CATEGORIES.contact, re: /\b(?:Rue|Avenue|Av\.|Chemin|Ch\.|Route|Rte|Boulevard|Bd)[ \t]+[^\n\r|]{2,65}?[ \t]+\d{1,4}[a-z]?(?=[ \t]*(?:$|\n|\r|N[°o]|\||,))/gim, label: 'Adresse (rue)' },
+  { key: 'lab_dotted_id', category: CATEGORIES.admin, re: /\b(?:\d{1,3}\/)?\d{1,3}\.\d{3}\.\d{3}\b/g, label: 'Identifiant laboratoire' },
+  { key: 'lab_client', category: CATEGORIES.admin, re: /(?:N[°o][ \t]+(?:de[ \t]+)?(?:client|patient|demande)|Vio[ -]?N[°o]?)[ \t:]*\d[\d.\/-]{2,20}/gi, label: 'Identifiant administratif' },
   // Dates DD.MM.YYYY / DD/MM/YYYY / DD-MM-YYYY
   { key: 'date_dmy', category: CATEGORIES.dates, re: /\b(?:0?[1-9]|[12]\d|3[01])[\.\/\-](?:0?[1-9]|1[0-2])[\.\/\-](?:19|20)\d{2}\b/g, label: 'Date' },
   // Long date format: 14 mars 2024

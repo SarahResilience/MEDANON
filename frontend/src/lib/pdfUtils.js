@@ -5,6 +5,11 @@ import Tesseract from 'tesseract.js';
 import jsPDF from 'jspdf';
 import { recognizePage } from './ocrEngine.mjs';
 import { DEMO_TEXT, DEMO_META } from './demoDocument';
+import { Capacitor, registerPlugin } from '@capacitor/core';
+import { Filesystem, Directory } from '@capacitor/filesystem';
+import { Share } from '@capacitor/share';
+import { deliverPdf } from './pdfDelivery.mjs';
+const SaveDocument = registerPlugin('SaveDocument');
 
 // Bundled with the app and served from the same origin.
 pdfjsLib.GlobalWorkerOptions.workerSrc = `${process.env.PUBLIC_URL || ''}/pdf.worker.min.mjs`;
@@ -240,6 +245,7 @@ function bboxOf(words) {
 // Draws the redacted (or pseudonymized) canvases and rasterizes them into a new PDF.
 // Because the pages are drawn as flattened images, the original text is unrecoverable.
 export async function exportAnonymizedPdf({ pages, redactionsByPage, mode, pseudonymFn, filename = 'compte_rendu_ANONYMISE.pdf' }) {
+  if (!pages.length) throw new Error('Aucune page à exporter.');
   const pdf = new jsPDF({ unit: 'pt', format: 'a4', compress: true });
   const pageW = pdf.internal.pageSize.getWidth();
   const pageH = pdf.internal.pageSize.getHeight();
@@ -271,7 +277,10 @@ export async function exportAnonymizedPdf({ pages, redactionsByPage, mode, pseud
   }
   // Sanitize metadata
   pdf.setProperties({ title: 'Document anonymisé', subject: '', author: '', keywords: '', creator: 'MedAnon Local' });
-  pdf.save(filename);
+  return deliverPdf(pdf, filename, Capacitor.isNativePlatform() ? {
+    filesystem: Filesystem, share: Share, cacheDirectory: Directory.Cache,
+    saveDocument: Capacitor.getPlatform() === 'android' ? SaveDocument : null,
+  } : null);
 }
 
 function drawRedaction(ctx, box, det, mode, pseudonymFn) {
